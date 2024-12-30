@@ -21,4 +21,21 @@ import userRoute from "./routes/user.routes.js";
 //routes declaration
 app.use("/api/v1/users", userRoute);
 
+//Error handling middleware
+app.use((err, req, res, next) => {
+  // console.log("Inside error handling middleware");
+  console.error(err.stack); // Log the error
+
+  // Set the status code (default to 500)
+  const statusCode = err.statusCode || 500;
+
+  // Send a JSON response
+  res.status(statusCode).json({
+    error: {
+      statusCode,
+      message: err.message || "Internal Server Error",
+    },
+  });
+});
+
 export { app };
