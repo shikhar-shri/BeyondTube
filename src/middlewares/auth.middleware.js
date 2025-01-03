@@ -12,6 +12,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   }
 
   try {
+    //decode the payload
     const decodedToken = await jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET

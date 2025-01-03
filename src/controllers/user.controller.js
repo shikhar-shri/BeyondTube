@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiErrors.js";
 import { User } from "../models/user.model.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { generateAccessAndRefreshTokens } from "../utils/generateAccessAndRefreshTokens.js";
 import jwt from "jsonwebtoken";
@@ -58,8 +61,14 @@ const registerUser = asyncHandler(async (req, res) => {
   //create() method creates and saves the doc in one step
   const user = await User.create({
     fullname,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
+    avatar: {
+      url: avatar.url,
+      public_id: avatar.public_id,
+    },
+    coverImage: {
+      url: coverImage?.url,
+      public_id: coverImage?.public_id,
+    },
     email,
     password,
     username: username.toLowerCase(),
@@ -221,4 +230,86 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  /* verifyJWT-> chng password
+    1. check for req.user since it is a secured functionality
+    2. retrieve current and new password from req.body
+    3. check if current password entered by the user matches with that stored in db
+    4. if yes, update the password with the new password
+*/
+
+  const { currentPassword, newPassword } = req.body;
+
+  const loggedInUser = await User.findById(req.user?._id);
+
+  if (!(await loggedInUser.isPasswordCorrect(currentPassword)))
+    throw new ApiError(401, "Unauthorized: current password is incorrect");
+
+  loggedInUser.password = newPassword;
+  await loggedInUser.save();
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { username: loggedInUser.username, password: loggedInUser.password },
+        "password updated successfully"
+      )
+    );
+});
+
+const changeUserAvatar = asyncHandler(async (req, res) => {
+  /*
+    req.user?
+    req.file?
+    1. Check if avatar file is stored locally correctly
+    2. Delete existing avatar for the user from cloudinary
+    3. upload the new avatar to cloudinary.
+    4. update the cloudinary url for the user in db
+    
+    */
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) throw new ApiError(400, "Avatar field is required");
+
+  const user = await User.findById(req.user?._id);
+  const currentAvatarPublicId = user.avatar.public_id;
+
+  if (!(await deleteFromCloudinary(currentAvatarPublicId)))
+    console.error(
+      `Existing avatar file: ${user.avatar.url} could not be deleted from cloudinary while updating the avatar file!`
+    );
+
+  const newAvatar = await uploadToCloudinary(avatarLocalPath);
+
+  if (!newAvatar)
+    throw new ApiError(500, "Avatar file couldn't be uploaded to cloudinary");
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: {
+          url: newAvatar.url,
+          public_id: newAvatar.public_id,
+        },
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password -refreshToken");
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "Avatar updated successfully"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  changeUserAvatar,
+};
