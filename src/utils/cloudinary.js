@@ -52,11 +52,13 @@ const deleteFromCloudinary = async (public_id) => {
 
   try {
     const response = await cloudinary.uploader.destroy(public_id, {
-      resource_type: "auto",
+      resource_type: "image",
     });
 
     return response;
   } catch (error) {
+    console.error(error);
+
     return null;
   }
 };

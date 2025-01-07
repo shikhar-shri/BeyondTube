@@ -8,6 +8,7 @@ import {
 import { ApiResponse } from "../utils/apiResponse.js";
 import { generateAccessAndRefreshTokens } from "../utils/generateAccessAndRefreshTokens.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend - done
@@ -274,11 +275,14 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user?._id);
   const currentAvatarPublicId = user.avatar.public_id;
+  /*
+    pg0vsxot4ixphk4fr7mk
+    
+    */
 
-  if (!(await deleteFromCloudinary(currentAvatarPublicId)))
-    console.error(
-      `Existing avatar file: ${user.avatar.url} could not be deleted from cloudinary while updating the avatar file!`
-    );
+  //   console.log("current avatar's public id: ", currentAvatarPublicId);
+
+  await deleteFromCloudinary(currentAvatarPublicId);
 
   const newAvatar = await uploadToCloudinary(avatarLocalPath);
 
@@ -305,6 +309,104 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedUser, "Avatar updated successfully"));
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username) throw new ApiError(400, "Username is missing");
+
+  const channel = await User.aggregate([
+    {
+      $match: { username: username },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers", //will be stored as an array of docs
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        isSubscribed: {
+          $in: [req.user?._id, "$subscribers.subscriber"], //true/false depending on whether the current logged in user has subscribed to this channel or not
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+      },
+    },
+  ]);
+
+  if (!channel) throw new ApiError(404, "Channel does not exist");
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "Channel details fetched sucessfully")
+    );
+});
+
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(String(req.user._id)),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullname: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$owner",
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "User's watch history fetched successfully"
+      )
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -312,4 +414,6 @@ export {
   refreshAccessToken,
   changeCurrentPassword,
   changeUserAvatar,
+  getUserChannelProfile,
+  getUserWatchHistory,
 };
