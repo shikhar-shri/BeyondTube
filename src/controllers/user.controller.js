@@ -163,8 +163,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -417,3 +417,13 @@ export {
   getUserChannelProfile,
   getUserWatchHistory,
 };
+
+/**
+ * 
+ * 
+ *
+accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzdlMjhlNjFkMjE3OGU3MTQzMjUyNmUiLCJlbWFpbCI6InJla2hhLnNyaTEyM0BnbWFpbC5jb20iLCJ1c2VybmFtZSI6InJla2hhMTIzIiwiaWF0IjoxNzM2MzI0MTk5LCJleHAiOjE3MzYzMjQyNTl9.f-vFIcfaV6gfNJPbqMNECotFVJyYi1u7nDahLXHGV4w; 
+
+refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzdlMjhlNjFkMjE3OGU3MTQzMjUyNmUiLCJpYXQiOjE3MzYzMjQxOTksImV4cCI6MTczNzE4ODE5OX0.BXn9_l91jAtjOQY9QrE8zt0n5yefK0LBgjsNlTh2Z-k
+ * 
+ */
