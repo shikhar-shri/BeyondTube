@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
 const videoSchema = new Schema(
   {
@@ -20,6 +20,7 @@ const videoSchema = new Schema(
     title: {
       type: String,
       required: true,
+      index: true, //creating an index on the title field for efficient searching
     },
 
     description: {
@@ -44,4 +45,4 @@ const videoSchema = new Schema(
   { timestamps: true }
 );
 
-export const Video = new Model("Video", videoSchema);
+export const Video = new model("Video", videoSchema);
