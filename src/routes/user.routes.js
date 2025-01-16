@@ -38,7 +38,9 @@ router
   .route("/change-avatar")
   .patch(verifyJWT, upload.single("avatar"), changeUserAvatar);
 
-router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
+router
+  .route("/channels/channel/:username")
+  .get(verifyJWT, getUserChannelProfile);
 
 router.route("/watch-history").get(verifyJWT, getUserWatchHistory);
 

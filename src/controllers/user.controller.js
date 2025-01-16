@@ -237,7 +237,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     2. retrieve current and new password from req.body
     3. check if current password entered by the user matches with that stored in db
     4. if yes, update the password with the new password
-*/
+  */
 
   const { currentPassword, newPassword } = req.body;
 
