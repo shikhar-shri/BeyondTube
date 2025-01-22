@@ -18,10 +18,6 @@ const createAComment = asyncHandler(async (req, res) => {
   const { content, parentCommentId } = req.body;
   const { videoId } = req.params;
 
-  if (!(await Video.findById(new mongoose.Types.ObjectId(String(videoId))))) {
-    throw new ApiError(404, "Video not found!!");
-  }
-
   if (!content) {
     throw new ApiError(400, "Content is required!!");
   }
@@ -30,6 +26,9 @@ const createAComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video ID is required!!");
   }
 
+  if (!(await Video.findById(new mongoose.Types.ObjectId(String(videoId))))) {
+    throw new ApiError(404, "Video not found!!");
+  }
   /*
     parentCommentId will be null for top-level comments.
     For replies on an existing comment, parentCommentId will be the id of the already existing comment.

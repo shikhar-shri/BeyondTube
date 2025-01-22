@@ -42,7 +42,7 @@ const commentSchema = new Schema(
       default: 0,
     },
 
-    dislikeCount: {
+    dislikesCount: {
       type: Number,
       default: 0,
     },

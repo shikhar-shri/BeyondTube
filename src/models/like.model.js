@@ -3,33 +3,28 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 /**
  *
- * this schema contains the following info about
+ * these schemas contains the following info about
  * a like/dislike:
- * 1. video to which like/dislke has been made
- * 2. comment(of a video) to which like/dislike has been made
- * 3. user which liked/dislked the video/comment
+ * 1. videoId and UserId
+ * 2. commentId and UserId
+ * 3. string type, which can be either "like" or "dislike"
  *
  */
 
-const likeSchema = new Schema(
+const videoLikeSchema = new Schema(
   {
     video: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Video",
       required: true,
+      index: true,
     },
-
-    likedBy: {
+    likedOrDislikedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
-
-    comment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-
     type: {
       type: String,
       enum: ["like", "dislike"],
@@ -39,4 +34,32 @@ const likeSchema = new Schema(
   { timestamps: true }
 );
 
-export const Like = new model("Like", likeSchema);
+const commentLikeSchema = new Schema(
+  {
+    comment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      required: true,
+      index: true,
+    },
+    likedOrDislikedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    type: {
+      type: String,
+      enum: ["like", "dislike"],
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+//Ensure a user can only like or dislike a particular video or comment once by creating a compound index.
+videoLikeSchema.index({ video: 1, likedOrDislikedBy: 1 }, { unique: true });
+commentLikeSchema.index({ comment: 1, likedOrDislikedBy: 1 }, { unique: true });
+
+export const VideoLike = new model("VideoLike", videoLikeSchema);
+export const CommentLike = new model("CommentLike", commentLikeSchema);
