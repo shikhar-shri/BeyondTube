@@ -174,27 +174,6 @@ src/
 - **asyncHandler.js**: Wraps async functions to handle errors.
 - **cloudinary.js**: Integrates with Cloudinary for media storage.
 
-## Future Improvements
-
-- **Pagination**:
-
-  - Implement for video and comment retrieval endpoints.
-
-- **Redis Caching**:
-
-  - Cache popular API responses to reduce database load.
-
-- **Scalable Video Storage**:
-
-  - Migrate media storage to **AWS S3** for better scalability.
-
-- **Rate Limiting**:
-
-  - Add middleware to prevent abuse of APIs.
-
-- **WebSocket Support**:
-  - Enable real-time notifications for comments and likes.
-
 ## Contributing
 
 Contributions are welcome! Please follow the steps below:
