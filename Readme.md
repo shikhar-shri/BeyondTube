@@ -84,9 +84,11 @@ src/
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- MongoDB
-- Cloudinary account for video storage
+Before running the server, ensure you have the following:
+
+1. **Node.js**: Install the latest stable version of Node.js from [nodejs.org](https://nodejs.org/).
+2. **MongoDB Atlas Account**: This project uses MongoDB Atlas, an online cloud database service. Ensure you have a MongoDB Atlas account and a cluster set up. You do not need MongoDB installed locally.
+3. **Cloudinary Account**: Set up a Cloudinary account for handling video and image uploads.
 
 ### Steps
 
