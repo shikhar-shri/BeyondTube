@@ -16,4 +16,14 @@ const connectDB = async () => {
   }
 };
 
-export default connectDB;
+// Graceful shutdown for MongoDB
+const closeDB = async () => {
+  try {
+    await mongoose.connection.close(); // Ensures no new requests are accepted
+    console.log("MongoDB connection closed gracefully.");
+  } catch (error) {
+    console.error("Error while closing MongoDB connection:", error);
+  }
+};
+
+export { connectDB, closeDB };

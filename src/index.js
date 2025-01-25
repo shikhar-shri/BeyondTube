@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import connectDB from "./db/index.js";
+import { connectDB, closeDB } from "./db/index.js";
 import { app } from "./app.js";
 
 dotenv.config({ path: "./.env" });
@@ -7,9 +7,26 @@ dotenv.config({ path: "./.env" });
 connectDB()
   .then(() => {
     // console.log("connection with db successful.");
-    app.listen(process.env.PORT || 8000, () => {
+    const server = app.listen(process.env.PORT || 8000, () => {
       console.log(`App is listening on port: ${process.env.PORT}`);
     });
+
+    const gracefulShutdown = (signal) => {
+      console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+
+      // Close the HTTP server
+      server.close(async () => {
+        console.log("HTTP server closed.");
+
+        // Close MongoDB connection
+        await closeDB();
+        process.exit(0);
+      });
+    };
+
+    // Handle termination signals
+    process.on("SIGINT", () => gracefulShutdown("SIGINT")); // Ctrl+C
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM")); // Docker stop or similar
   })
   .catch((error) => {
     console.log("mongo db connection failed!", error);
